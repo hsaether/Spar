@@ -1,0 +1,181 @@
+Touchstone Format (*.snp)
+These files contain small-signal S-parameters described by frequency-dependent linear network parameters for 1- to 10-port components. The 2-port component files can also contain frequency-dependent noise parameters. This data file format is also known as Touchstone format.
+Overview
+Touchstone files are ASCII text files in which frequency dependent data appears line by line, one line per data point, in increasing order of frequency. Each frequency line consists of a frequency value and one or more pairs of values for the magnitude and phase of each S-parameter at that frequency. Values are separated by one or more spaces, tabs or commands. Comments are preceded by an exclamation mark (!). Comments can appear on separate lines, or after the data on any line or lines. Extra spaces are ignored. 
+Filename Recommendations
+    1-port: filename.s1p, 2-port: filename.s2p, ... i.e. n-port: filename.snp
+Basic File Format
+The file format consists of:
+Comments
+Option Line
+S-Parameter Data Lines
+Noise Data Lines
+Comments
+Comments can be placed anywhere in the file by preceding a comment with the exclamation mark !. A comment can be the only entry on a line or can follow the data.
+The Option Line
+The option line specifies the format of the data in the file. The line looks like:  # GHZ S MA R 50
+#  <FREQ_UNITS>  <TYPE>  <FORMAT>  <Rn>
+#  = Option line delimiter
+<FREQ_UNITS> = Units of the frequency data. Options are GHz, MHz, KHz, or Hz.
+<TYPE> = Type of file data. Options are:  S, Y or Z for S1P components, S, Y, Z, G, or H for S2P components, S for 3 or more ports
+<FORMAT> = S-parameter format. Options are: DB for dB-angle, MA for magnitude angle, RI for real-imaginary
+ <Rn> = Reference resistance in ohms, where n is a positive number. This is the impedance the S-parameters were normalized to.
+In summary:
+For .s1p files: #  [ HZ / KHZ / MHZ / GHZ]   [ S / Y / Z ]   [ MA / DB / RI ]   [ Rn ]
+For .s2p files: #  [ HZ / KHZ / MHZ / GHZ ]   [ S / Y / Z / G / H ]   [ MA / DB / RI ]   [ Rn ]
+For .snp (n >= 3) files: #  [ HZ / KHZ / MHZ / GHZ ]   [ S ]   [ MA / DB / RI ]   [ Rn ]
+where square brackets [...] indicate optional information; .../.../.../ indicates that you select one of the choices; and, n is replaced by a positive number.
+S-Parameter Data
+Frequency data lines contain the data of interest. A special format is used for 2-port data files where all of the network parameter data for a single frequency is listed on one line. The order of the network parameters is:
+    S11, S21, S12, S22
+For 3-port or higher data files, the network parameters appear in the file in a matrix form, each row starting on a separate line. A maximum of four network parameters (with 2 real numbers for each) appear on any line. The remaining network parameters are continued on as many additional lines as are needed.
+The following sections describe the data-line format for single and multi-port components.
+S-Parameter Data Line Format
+The frequency line data will have one of the following formats:
+Magnitude Angle
+<FREQ>  |S11|  <S11  |S21|  <S21  |S12|  <S12  |S22|  <S22
+Real Imaginary
+<FREQ>  Re{S11}  Im{S11}  Re{S21}  Im{S21}  Re{S12}  Im{S12}  Re{S22}  Im{S22}
+dB Angle
+<FREQ>  20log10|S11|  <S11  20log10|S21|  <S21  20log10|S12|  <x12 20log10|S22|  <S22
+Note: For each s1p and s2p file format, the data must be on one line.
+3-port Data Magnitude Angle Example
+<FREQ>  |S11|  <S11  |S12|  <S12  |S13|  <S13
+               |S21|  <S21  |S22|  <S22  |S23|  <S23
+               |S31|  <S31  |S32|  <S32  |S33|  <S33
+4-port Data Magnitude Angle Example
+<FREQ>  |S11|  <S11  |S12|  <S12  |S13|  <S13  |S14|  <S14
+               |S21|  <S21  |S22|  <S22  |S23|  <S23  |S24|  <S24
+               |S31|  <S31  |S32|  <S32  |S33|  <S33  |S34|  <S34
+               |S41|  <S41  |S42|  <S42  |S43|  <S43  |S44|  <S44
+Noise Parameters
+Noise parameters can be included in Touchstone files. Noise data follows the S-parameter data. It has the following format:
+<FREQ>  <NFmin dB>  <|Gammaopt|>  <Ang(Gammaopt)>  <Rn>
+where 
+<FREQ> = Frequency of the noise data In units specified in the options line
+<NFmin dB> = Minimum noise figure in dB
+<|Gammaopt|> = Magnitude of the source reflection coefficient at the minimum noise figure
+<Ang(Gammaopt)> = Phase angle in degrees of the source reflection coefficient at the minimum noise figure
+<Rn> = Effective noise resistance normalized to the system impedance defined in the option line. It defines the rate at which the noise figure increases as the reflection coefficient is moved away from the optimum values. In other words, how tightly spaced the noise circles are.
+Note: The frequencies for noise and S parameters need not match. The only requirement is that the lowest noise-parameter frequency be less than or equal to the highest S-parameter frequency.
+Noise Data Example
+This is an example of a data file with noise data:
+! NEC710
+# GHZ S MA R 50
+2    .95   -26  3.57  157  .04  76  .66  -14
+22  .60  -144  1.30   40  .14  40  .56  -85
+ 
+! NOISE PARAMETERS
+4    .7    .64   69  .38
+18  2.7   .46  -33  .40
+S-Parameter 5 to 99 Port File Formats
+These file formats appear in a matrix form similar to the 3 and 4 port files, except that only four S-parameters (with 2 real numbers for each) can appear on a given line. Therefore, the remaining S-parameters in that row of the S-matrix continue on the next line of the file.
+Each row of the S-matrix must begin on a new line of the file. The first line of the first row of the S-matrix begins with the frequency value.
+S-Parameter 10-Port File Example (at One Frequency)
+#  <FREQ_UNITS>  <TYPE>  <FORMAT>  <Rn>
+<FREQ> magS11 angS11 magS12 angS12 magS13 angS13 magS14 angS14    ! 1st row
+ magS15 angS15 magS16 angS16 magS17 angS17 magS18 angS18
+ magS19 angS19 magS1,10 angS1,10
+ 
+ magS21 angS21 magS22 angS22 magS23 angS23 magS24 angS24    ! 2nd row
+ magS25 angS25 magS26 angS26 magS27 angS27 magS28 angS28
+ magS29 angS29 magS2,10 angS2,10
+ 
+ magS31 angS31 magS32 angS32 magS33 angS33 magS34 angS34    ! 3rd row
+ magS35 angS35 magS36 angS36 magS37 angS37 magS38 angS38
+ magS39 angS39 magS3,10 angS3,10
+ 
+ magS41 angS41 magS42 angS42 magS43 angS43 magS44 angS44    ! 4th row
+ magS45 angS45 magS46 angS46 magS47 angS47 magS48 angS48
+ magS49 angS49 magS4,10 angS4,10
+ 
+ magS51 angS51 magS52 angS52 magS53 angS53 magS54 angS54    ! 5th row
+ magS55 angS55 magS56 angS56 magS57 angS57 magS58 angS58
+ magS59 angS59 magS5,10 angS5,10
+ 
+ magS61 angS61 magS62 angS62 magS63 angS63 magS64 angS64    ! 6th row
+ magS65 angS65 magS66 angS66 magS67 angS67 magS68 angS68
+ magS69 angS69 magS6,10 angS6,10
+ 
+ magS71 angS71 magS72 angS72 magS73 angS73 magS74 angS74    ! 7th row
+ magS75 angS75 magS76 angS76 magS77 angS77 magS78 angS78
+ magS79 angS79 magS7,10 angS7,10
+ 
+ magS81 angS81 magS82 angS82 magS83 angS83 magS84 angS84    ! 8th row
+ magS85 angS85 magS86 angS86 magS87 angS87 magS88 angS88
+ magS89 angS89 magS8,10 angS8,10
+ 
+ magS91 angS91 magS92 angS92 magS93 angS93 magS94 angS94    ! 9th row
+ magS95 angS95 magS96 angS96 magS97 angS97 magS98 angS98
+ magS99 angS99 magS9,10 angS9,10
+ 
+ magS10,1 angS10,1 magS10,2 angS10,2 magS10,3 angS10,3 magS10,4 angS10,4     ! 10th row
+ magS10,5 angS10,5 magS10,6 angS10,6 magS10,7 angS10,7 magS10,8 angS10,8 
+ magS10,9 angS10,9 magS10,10 angS10,10
+Linear 1-Port (.s1p) File Example
+ # GHZ   S   RI   R   50.0
+     1.00000000    0.9488    -0.2017
+     1.50000000    0.9077    -0.3125
+     2.00000000    0.8539    -0.4165
+     2.50000000    0.7884    -0.5120
+     3.00000000    0.7124    -0.5978
+     3.50000000    0.6321    -0.6546
+     4.00000000    0.5479    -0.7013
+     4.50000000    0.4701    -0.7380
+     5.00000000    0.3904    -0.7663
+     5.50000000    0.3302    -0.7778
+     6.00000000    0.2702    -0.7848
+     6.50000000    0.2041    -0.7890
+     7.00000000    0.1389    -0.7878
+     7.50000000    0.0894    -0.7849
+     8.00000000    0.0408    -0.7789
+     8.50000000    0.0134    -0.7649
+     9.50000000    0.0654    -0.7471
+     9.00000000    0.1094    -0.7319
+     10.0000000    0.1518    -0.7140
+Linear 2-Port (.s2p) File Example
+ # GHZ    S   RI   R   50.0
+ 1.0000  0.3926  -0.1211  -0.0003  -0.0021  -0.0003  -0.0021  0.3926  -0.1211
+ 2.0000  0.3517  -0.3054  -0.0096  -0.0298  -0.0096  -0.0298  0.3517  -0.3054
+ 10.000  0.3419   0.3336  -0.0134   0.0379  -0.0134   0.0379  0.3419   0.3336
+ ! Noise parameters
+  1.0000  2.0000  -0.1211  -0.0003  .4
+  2.0000  2.5000  -0.3054  -0.0096  .45
+  3.0000  3.0000  -0.6916  -0.6933  .5
+  4.0000  3.5000  -0.3756   0.4617  .55
+  5.0000  4.0000   0.3880   0.6848  .6
+  6.0000  4.5000   0.0343   0.0383  .65
+  7.0000  5.0000   0.6916   0.6933  .7
+  8.0000  5.5000   0.5659   0.1000  .75
+  9.0000  6.0000   0.4145   0.0307  .8
+ 10.0000  6.5000   0.3336   0.0134  .85
+Linear 3-Port (.s3p) File Example
+ #  GHZ  S  MA  R  50.0
+ !  POWER DIVIDER, 3-PORT
+ 5.00000  0.24254  136.711   0.68599  -43.3139  0.68599  -43.3139     ! Frequency Line 1
+          0.68599  -43.3139  0.08081   66.1846  0.28009  -59.1165
+          0.68599  -43.3139  0.28009  -59.1165  0.08081   66.1846
+ 
+ 6.00000  0.20347  127.652   0.69232  -52.3816  0.69232  -52.3816     ! Frequency Line 2
+          0.69232  -52.3816  0.05057   52.0604  0.22159  -65.1817
+          0.69232  -52.3816  0.22159  -65.1817  0.05057   52.0604
+ 
+ 7.00000  0.15848  118.436   0.69817  -61.6117  0.69817  -61.6117     ! Frequency Line 3
+          0.69817  -61.6117  0.02804   38.6500  0.16581  -71.2358
+          0.69817  -61.6117  0.16581  -71.2358  0.02804   38.6500
+Linear 4-Port (.s4p) File Example
+ #  GHZ  S  MA  R  50
+ 5.00000 0.60262  161.240  0.40611 -42.2029 0.42918 -66.5876 0.53640 -79.3473     ! Frequency Line 1
+         0.40611  -42.2029 0.60262 161.240  0.53640 -79.3473 0.42918 -66.5876
+         0.42918  -66.5876 0.53640 -79.3473 0.60262 161.240  0.40611 -42.2029
+         0.53640  -79.3473 0.42918 -66.5876 0.40611 -42.2029 0.60262 161.240
+ 
+ 6.00000 0.57701  150.379  0.40942 -44.3428 0.41011 -81.2449 0.57554 -95.7731     ! Frequency Line 2
+         0.40942  -44.3428 0.57701 150.379  0.57554 -95.7731 0.41011 -81.2449
+         0.41011  -81.2449 0.57554 -95.7731 0.57701 150.379  0.40942 -44.3428
+         0.57554  -95.7731 0.41011 -81.2449 0.40942 -44.3428 0.57701 150.379
+ 
+ 7.00000 0.50641  136.693  0.45378 -46.4151 0.37845 -99.0918 0.62802 -114.196     ! Frequency Line 3
+         0.45378  -46.4151 0.50641 136.693  0.62802 -114.196 0.37845 -99.0918
+         0.37845  -99.0918 0.62802 -114.196 0.50641 136.693  0.45378 -46.4151
+         0.62802 -114.196  0.37845 -99.0918 0.45378 -46.4151 0.50641 136.693
