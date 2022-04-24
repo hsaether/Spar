@@ -21,8 +21,8 @@ Ver = 0.3
 # (freq, s1p, Z0) = toS2P(fs1p, fGain)
 #
 
-#fs1p = r"C:\GitWrk\Spar\Data\dummy.s1p"
-#fGain = r"C:\GitWrk\Spar\Data\Gain.s1p"
+fs1p = r"C:\GitWrk\Spar\Data\dummy.s1p"
+fGain = r"C:\GitWrk\Spar\Data\Gain.s1p"
 
 def toS2P(fileS1P, fileGain = "", outFormat = 'MA'):
     # fileGain = "": Lossless (|S21| < 1)  
@@ -93,3 +93,5 @@ def toS2P(fileS1P, fileGain = "", outFormat = 'MA'):
         f.close()
 
     return(freq, s1p, Z0)
+
+toS2P(fs1p, fGain),
