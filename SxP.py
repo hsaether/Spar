@@ -1,20 +1,28 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from numpy import pi
+from numpy import double, pi
 import re
 
 def __init__():
-    __all__ = ["parse"]
+    __all__ = ["parse", "SLossless", "SLossy"]
 
 #Ver 0.2: If |S11| > 1 |S12| = 0
 #Ver 0.3: SxP:parse, Fixed freq_mult, Added nrOfPorts, S12Lossless
+#Ver 0.4: SxP:SLossless, converting whole array instead of single freq. 
+#         SxP:SLossy, converting whole array instead of single freq. 
 
+# Usage
 # import SxP as sxp
 # (f,s1p,z) = sxp.parse(r"C:\Users\hsaether\OneDrive\Source\repos\Spar\Data\Sma-3p9-att0.0.s1p")
 
 def parse(filename, show=True):
-    # Declarations
+    # Parse a file. 1 or 2 port
+    # Returns:
+    #   Frequency
+    #   S parameters
+    #   Z0
+
     ports = 0
     freq = np.array([])
     Spar = np.array([[]])
@@ -85,6 +93,8 @@ def parse(filename, show=True):
     return(freq, Spar, Z)
 
 def nrOfPorts(filename, show=True):
+    # Finds nr of port from filename extension. 
+    # Returns nr of ports. 
     ports = 0
     try:
         s1 = re.findall("[sS][1-9][pP]$", filename)
@@ -97,6 +107,7 @@ def nrOfPorts(filename, show=True):
     return(ports)
 
 def parseLine(line, show=True):
+    # Splits a line rom sxp file into data
     data = []
     l1 = re.sub("^\s+","", line)
     line = re.sub("\s+$","", l1)
@@ -108,6 +119,8 @@ def parseLine(line, show=True):
     return(data)
 
 def dataToSpar(data, format, ports):
+    # Converts data from sxp to complex format
+    # Returns complex format
     sp = np.array([])
     for i in range(0, ports**2):
         if str.upper(format) == "RI":
@@ -120,6 +133,8 @@ def dataToSpar(data, format, ports):
     return(sp)
 
 def SparToLine(spar, format):
+    # Convert an array of complex s parameters to a text line. 
+    # Returns the text line. 
     line = ""
     for sxx in spar:
         if str.upper(format) == "RI":
@@ -135,39 +150,76 @@ def SparToLine(spar, format):
 
     return(line)
 
-def S12Lossless(f, s11):
+def SLossless(freq, s11A):
     # Conversion
     # Symmetry S11 = S22
     # Resiprocial S12 = S21
     # Lossless |S11|^2 + |S12|^2 = 1
     # p12 + p21 - (p11 + p22) = pi
-    if (np.abs(s11) > 1):
-        print("Warning: Freq: " + str(np.round(f/1000000,1)) + "MHz, |S11|>1: " + str(np.round(np.abs(s11),3)) )
-        abs12 = 0
-    else:
-        abs12 = np.sqrt(1-np.abs(s11)**2)
+    # Returns s2 parameters
+
+    s2 = np.empty([0,4])
+    for i in range(len(freq)):
+        f1 = freq[i]
+        s11 = s11A[i]
+        if (np.abs(s11) > 1):
+            print("Warning: Freq: " + str(np.round(f1/1000000,1)) + "MHz, |S11|>1: " + str(np.round(np.abs(s11),3)) )
+            abs12 = 0
+        else:
+            abs12 = np.sqrt(1-np.abs(s11)**2)
         angle12 = -pi/2 + np.angle(s11)
         s12 = complex(abs12 * np.cos(angle12), abs12 * np.sin(angle12))
-    return(s12)
+        s2 = np.vstack([s2, [s11, s12, s12, s11]])
+    return(s2)
 
-def S12Lossy(f, s11, s12G):
+def SLossy(freq, s11A, s12GA):
     # Conversion
     # Symmetry S11 = S22
     # Resiprocial S12 = S21
     # Lossy |S11|^2 + |S12|^2 < 1 = s12G 
     # p12 + p21 - (p11 + p22) = pi
-    if (np.abs(s11) > 1):
-        print("Warning: Freq: " + str(np.round(f/1000000,1)) + " MHz, S11|>1: " + str(np.round(np.abs(s11),3)) )
-        abs12 = 0
-    else:
-        abs12 = np.sqrt(1-np.abs(s11)**2)
-    abs12G = np.abs(s12G)
-    if abs12 < abs12G:
-        print("Warning: Freq: " + str(np.round(f/1000000,1)) + " MHz, Lossless |S12|< S12G: " + str(np.round(abs12,3)) +" < " + str(np.round(abs12G,3)) )
-    else:   
-        abs12 = abs12G            
-    angle12 = -pi/2 + np.angle(s11)
-    s12 = complex(abs12 * np.cos(angle12), abs12 * np.sin(angle12))
-    return(s12)
+    # Returns s2 parameters
+
+    # finding gain adjustment
+    Gadj = 1.0
+    for i in range(len(freq)):
+        f1 = freq[i]
+        s11 = s11A[i]
+        s12G = s12GA[i]
+        if (np.abs(s11) > 1):
+            print("Warning: Freq: " + str(np.round(f1/1000000,1)) + " MHz, S11|>1: " + str(np.round(np.abs(s11),3)) )
+            abs12 = 0
+        else:
+            abs12 = np.sqrt(1-np.abs(s11)**2)
+        abs12G = np.abs(s12G)
+        if abs12 < abs12G:
+            print("Warning: Freq: " + str(np.round(f1/1000000,1)) + " MHz, Lossless |S12|< S12G: " + str(np.round(abs12,3)) +" < " + str(np.round(abs12G,3)) )
+            Gadj = np.min([Gadj, abs12 / abs12G])
+        else:   
+            abs12 = abs12G            
+    print("Gain adjust: %5.3f" % Gadj) 
+
+    s2 = np.empty([0,4])
+    for i in range(len(freq)):
+        f1 = freq[i]
+        s11 = s11A[i]
+        s12G = s12GA[i]*Gadj
+        if (np.abs(s11) > 1):
+            print("Warning: Freq: " + str(np.round(f1/1000000,1)) + " MHz, S11|>1: " + str(np.round(np.abs(s11),3)) )
+            abs12 = 0
+        else:
+            abs12 = np.sqrt(1-np.abs(s11)**2)
+        abs12G = np.abs(s12G)
+        if abs12 < abs12G:
+            print("Warning: Freq: " + str(np.round(f1/1000000,1)) + " MHz, Lossless |S12|< S12G: " + str(np.round(abs12,3)) +" < " + str(np.round(abs12G,3)) )
+        else:   
+            abs12 = abs12G            
+        angle12 = -pi/2 + np.angle(s11)
+        s12 = complex(abs12 * np.cos(angle12), abs12 * np.sin(angle12))
+
+        s2 = np.vstack([s2, [s11, s12, s12, s11]])
+
+    return(s2)
+
 
 
