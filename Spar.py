@@ -25,7 +25,10 @@ Ver = 0.4
 
 fs1p = r"C:\GitWork\Spar\Data\dummy.s1p"
 fGain = r"C:\GitWork\Spar\Data\Gain.s1p"
-fadrv = r"C:\GitWork\Spar\Data\ADRV9008-1.s1p"
+#fadrv = r"C:\GitWork\Spar\Data\ADRV9008-1.s1p"
+fadrv_orx = r"C:\GitWork\Spar\Data\ADRV9009_ORX.s1p"
+fadrv_rx = r"C:\GitWork\Spar\Data\ADRV9009_RX.s1p"
+fadrv_tx = r"C:\GitWork\Spar\Data\ADRV9009_TX.s1p"
 
 def toS2P(fileS1P, fileGain = "", outFormat = 'MA'):
     # fileGain = "": Lossless (|S21| < 1)  
@@ -34,14 +37,12 @@ def toS2P(fileS1P, fileGain = "", outFormat = 'MA'):
     # Finding nr of ports from filename extension    
     ports = sp.nrOfPorts(fileS1P, False)
     if(ports != 1):
-        print("Error: Input file must be one port")
-        return
+        raise ValueError('Error: Input file must be one port')
 
     if(fileGain != ""):
         ports = sp.nrOfPorts(fileGain, False)
         if(ports != 1):
-            print("Error: Input file must be one port")
-            return
+            raise ValueError('Error: Input file must be one port')
         lossless = False
     else:
         lossless = True
@@ -60,8 +61,7 @@ def toS2P(fileS1P, fileGain = "", outFormat = 'MA'):
         # Using Gain file, interpolating to freq samples
         (freqG, s1pG_, Z0G) = sp.parse(fileGain)
         if(Z0 != Z0G):
-            print("Error: Z0 must be equal")
-            return
+            raise ValueError('Error: Z0 must be equal')
         s1pG = np.interp(freq, freqG, s1pG_[:,0])
     # print(s1pG)    
     # print(freq)
@@ -94,13 +94,16 @@ def toS2P(fileS1P, fileGain = "", outFormat = 'MA'):
     return(freq, s1p, Z0)
 
 def adrv9008(fileS1P, outFormat = 'MA'):
+    '''
+        ADRV 9008/9009 has balanced ports and requires special conversion.
+        S11 is converted to Z and converted back divided by 2
+    '''
     # Outformat = 'RI', 'MA', 'DB'
     
     # Finding nr of ports from filename extension    
     ports = sp.nrOfPorts(fileS1P, False)
     if(ports != 1):
-        print("Error: Input file must be one port")
-        return
+        raise ValueError('Error: Input file must be one port')
         
     # Output s2p file
     index = fileS1P.rfind(".")
@@ -138,4 +141,6 @@ def adrv9008(fileS1P, outFormat = 'MA'):
 #toS2P(fs1p, fGain)
 #toS2P(fs1p)
 
-adrv9008(fadrv)
+adrv9008(fadrv_orx)
+adrv9008(fadrv_rx)
+adrv9008(fadrv_tx)
