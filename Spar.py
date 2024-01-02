@@ -30,7 +30,9 @@ fadrv_orx = r"C:\GitWork\Spar\Data\ADRV9009_ORX.s1p"
 fadrv_rx = r"C:\GitWork\Spar\Data\ADRV9009_RX.s1p"
 fadrv_tx = r"C:\GitWork\Spar\Data\ADRV9009_TX.s1p"
 
-def toS2P(fileS1P, fileGain = "", outFormat = 'MA'):
+fadl5904 = r"G:/My Drive/Sim/Slib/PwrDetector/ADL5904_S11_DEEMBED.S1P"
+
+def toS2P(fileS1P, fileGain = "", outFormat = 'MA', adrv:bool=False):
     # fileGain = "": Lossless (|S21| < 1)  
     # Outformat = 'RI', 'MA', 'DB'
     
@@ -56,6 +58,12 @@ def toS2P(fileS1P, fileGain = "", outFormat = 'MA'):
     print("Output file: " + fileS2P)
 
     (freq, s1p, Z0) = sp.parse(fileS1P)
+    if adrv:
+        # adrv specific conversion
+        S11 = s1p[:,0]
+        Zin = spt.S11ToZin(S11, Z0)
+        S11_2 = spt.ZinToS11(Zin/2)
+        s1p = np.expand_dims(S11_2,axis=1)
 
     if (lossless == False):
         # Using Gain file, interpolating to freq samples
@@ -138,9 +146,18 @@ def adrv9008(fileS1P, outFormat = 'MA'):
     return(freq, S11_2, Z0)
 
 
+
+
 #toS2P(fs1p, fGain)
 #toS2P(fs1p)
+#toS2P(fadl5904)
 
-adrv9008(fadrv_orx)
-adrv9008(fadrv_rx)
-adrv9008(fadrv_tx)
+padrv = r"C:\GitWrk\Spar\Data\ADRV9009"
+#toS2P(padrv + "_ORX.s1p", padrv + "_ORX_G.s1p", adrv=True)
+#toS2P(padrv + "_TX.s1p", padrv + "_TX_G.s1p", adrv=True)
+#toS2P(padrv + "_RX.s1p", padrv + "_RX_G.s1p", adrv=True)
+#toS2P(padrv + "_TX.s1p", adrv=True)
+#toS2P(padrv + "_RX.s1p", adrv=True)
+toS2P(padrv + "_ORX.s1p", adrv=True)
+#adrv9008(fadrv_rx)
+#adrv9008(fadrv_tx)
