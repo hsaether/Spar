@@ -1,0 +1,29 @@
+import skrf as rf
+import numpy as np
+import matplotlib.pyplot as plt
+
+s2p_file = r'G:\Shared drives\Project\215 IoT SDR Payload\Test\Results\ISP - RxAmp\TRX2_BS0.s2p'
+er_eff = 2.5
+
+
+netw_s = rf.Network(s2p_file)
+s11 = netw_s.s11
+n = len(s11)
+s11 = np.zeros(n)
+
+for i, q in enumerate(netw_s.s11.s):
+    s11[i] = q[0][0]
+
+fmax = netw_s.s11.f[-1]
+a11 = np.fft.ifft(s11)
+b = 3e8/np.sqrt(er_eff)/2/fmax*1000
+x = np.arange(0,n)*b
+plt.plot(x[0:25], np.abs(a11)[0:25])
+plt.ylabel('abs(ifft(s11))')
+plt.grid()
+plt.xlabel('[mm]')
+plt.show()
+
+pass
+
+
